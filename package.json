@@ -1,0 +1,15 @@
+{
+  "name": "eventrisk-kempen",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace @eventrisk/web",
+    "dev:api": "npm run start:dev --workspace @eventrisk/api",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces"
+  }
+}
