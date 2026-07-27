@@ -9,6 +9,14 @@ export interface SessionUser {
   roles: string[];
 }
 
+export interface SessionTokens {
+  accessToken: string;
+  refreshToken?: string;
+  idToken?: string;
+  expiresAt: number;
+  scope: string;
+}
+
 interface TokenResponse {
   token_type: string;
   scope: string;
@@ -38,7 +46,7 @@ export class AuthService {
   }
 
   private get scopes() {
-    return (process.env.ENTRA_SCOPES || 'openid profile email User.Read').trim();
+    return (process.env.ENTRA_SCOPES || 'openid profile email User.Read offline_access').trim();
   }
 
   private get authorityBase() {
@@ -90,6 +98,33 @@ export class AuthService {
     return response.json() as Promise<TokenResponse>;
   }
 
+  async refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
+    const tokenEndpoint = `${this.authorityBase}/oauth2/v2.0/token`;
+
+    const body = new URLSearchParams({
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      scope: this.scopes
+    });
+
+    const response = await fetch(tokenEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: body.toString()
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Token refresh failed: ${response.status} ${errorText}`);
+    }
+
+    return response.json() as Promise<TokenResponse>;
+  }
+
   mapUserFromIdToken(idToken: string): SessionUser {
     const decoded = jwt.decode(idToken) as jwt.JwtPayload | null;
 
@@ -120,6 +155,22 @@ export class AuthService {
       provider: 'entra',
       roles
     };
+  }
+
+  toSessionTokens(tokenResponse: TokenResponse): SessionTokens {
+    const expiresAt = Date.now() + tokenResponse.expires_in * 1000;
+    return {
+      accessToken: tokenResponse.access_token,
+      refreshToken: tokenResponse.refresh_token,
+      idToken: tokenResponse.id_token,
+      expiresAt,
+      scope: tokenResponse.scope
+    };
+  }
+
+  isAccessTokenExpired(tokens?: SessionTokens, skewSeconds = 30): boolean {
+    if (!tokens?.expiresAt) return true;
+    return Date.now() >= tokens.expiresAt - skewSeconds * 1000;
   }
 
   hasRequiredConfig() {

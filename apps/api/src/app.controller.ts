@@ -10,7 +10,7 @@ import {
   UseGuards
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { AuthService, SessionUser } from './auth.service';
+import { AuthService, SessionTokens, SessionUser } from './auth.service';
 import { AuditService } from './audit.service';
 import { Roles } from './roles.decorator';
 import { RolesGuard } from './roles.guard';
@@ -23,6 +23,37 @@ export class AppController {
     private readonly auditService: AuditService,
     private readonly usersService: UsersService
   ) {}
+
+  private async ensureFreshTokens(req: Request): Promise<SessionTokens | null> {
+    const current = ((req.session as any).tokens || null) as SessionTokens | null;
+    if (!current) return null;
+
+    if (!this.authService.isAccessTokenExpired(current)) {
+      return current;
+    }
+
+    if (!current.refreshToken) {
+      return null;
+    }
+
+    const refreshed = await this.authService.refreshAccessToken(current.refreshToken);
+    const nextTokens = this.authService.toSessionTokens(refreshed);
+
+    (req.session as any).tokens = {
+      ...nextTokens,
+      refreshToken: refreshed.refresh_token || current.refreshToken
+    };
+
+    const user = (req.session as any).user as SessionUser | undefined;
+    await this.auditService.log({
+      action: 'auth.token.refreshed',
+      email: user?.email,
+      path: req.path,
+      status: 200
+    });
+
+    return (req.session as any).tokens;
+  }
 
   @Get('health')
   getHealth() {
@@ -112,7 +143,10 @@ export class AppController {
       }
 
       const user: SessionUser = this.authService.mapUserFromIdToken(tokenResponse.id_token);
+      const tokens = this.authService.toSessionTokens(tokenResponse);
+
       (req.session as any).user = user;
+      (req.session as any).tokens = tokens;
       (req.session as any).oauthState = undefined;
 
       const dbUser = await this.usersService.upsertFromSessionUser(user);
@@ -123,7 +157,11 @@ export class AppController {
         email: user.email,
         path: '/auth/callback',
         status: 302,
-        metadata: { roles: user.roles, entraObjectId: user.id }
+        metadata: {
+          roles: user.roles,
+          entraObjectId: user.id,
+          tokenExpiry: tokens.expiresAt
+        }
       });
 
       const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -153,6 +191,8 @@ export class AppController {
       };
     }
 
+    await this.ensureFreshTokens(req);
+
     const profile = await this.usersService.getProfileByEntraObjectId(user.id);
 
     return {
@@ -167,7 +207,11 @@ export class AppController {
             createdAt: profile.createdAt,
             updatedAt: profile.updatedAt
           }
-        : null
+        : null,
+      token: {
+        expiresAt: ((req.session as any).tokens as SessionTokens | undefined)?.expiresAt || null,
+        scope: ((req.session as any).tokens as SessionTokens | undefined)?.scope || null
+      }
     };
   }
 
@@ -236,6 +280,86 @@ export class AppController {
             roles: JSON.parse(profile.rolesJson || '[]')
           }
         : null
+    };
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles('EventRisk.Admin')
+  @Get('admin/audit-logs')
+  async adminAuditLogs(
+    @Req() req: Request,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+    @Query('action') action?: string,
+    @Query('email') email?: string
+  ) {
+    const user = (req.session as any).user as SessionUser | undefined;
+
+    if (!user) {
+      throw new UnauthorizedException('Login required');
+    }
+
+    const configuredRole = this.authService.getAdminRole();
+    if (!user.roles.includes(configuredRole)) {
+      throw new ForbiddenException('Admin role required');
+    }
+
+    const result = await this.auditService.list({
+      take: take ? Number(take) : undefined,
+      skip: skip ? Number(skip) : undefined,
+      action,
+      email
+    });
+
+    await this.auditService.log({
+      action: 'audit.read',
+      email: user.email,
+      path: '/admin/audit-logs',
+      status: 200,
+      metadata: {
+        take: result.take,
+        skip: result.skip,
+        filterAction: action || null,
+        filterEmail: email || null
+      }
+    });
+
+    return result;
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles('EventRisk.Admin')
+  @Get('events')
+  async listEvents(@Req() req: Request) {
+    const user = (req.session as any).user as SessionUser | undefined;
+
+    if (!user) {
+      throw new UnauthorizedException('Login required');
+    }
+
+    await this.ensureFreshTokens(req);
+
+    await this.auditService.log({
+      action: 'events.read',
+      email: user.email,
+      path: '/events',
+      status: 200
+    });
+
+    return {
+      items: [
+        {
+          id: 'evt-001',
+          title: 'Chemische lozing kanaal',
+          severity: 'high'
+        },
+        {
+          id: 'evt-002',
+          title: 'Wateroverlast na storm',
+          severity: 'medium'
+        }
+      ],
+      total: 2
     };
   }
 

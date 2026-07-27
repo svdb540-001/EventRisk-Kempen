@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 
 interface AuditLogInput {
@@ -12,23 +12,9 @@ interface AuditLogInput {
 
 @Injectable()
 export class AuditService {
-  private readonly logger = new Logger('AuditService');
-
   constructor(private readonly prisma: PrismaService) {}
 
   async log(input: AuditLogInput) {
-    const payload = {
-      ts: new Date().toISOString(),
-      action: input.action,
-      userId: input.userId || null,
-      email: input.email || null,
-      path: input.path || null,
-      status: input.status || null,
-      metadata: input.metadata || {}
-    };
-
-    this.logger.log(JSON.stringify(payload));
-
     await this.prisma.auditLog.create({
       data: {
         action: input.action,
@@ -39,5 +25,46 @@ export class AuditService {
         metadata: JSON.stringify(input.metadata || {})
       }
     });
+  }
+
+  async list(params: {
+    take?: number;
+    skip?: number;
+    action?: string;
+    email?: string;
+  }) {
+    const take = Math.min(Math.max(params.take ?? 20, 1), 100);
+    const skip = Math.max(params.skip ?? 0, 0);
+
+    const where = {
+      ...(params.action ? { action: params.action } : {}),
+      ...(params.email ? { email: params.email } : {})
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip
+      }),
+      this.prisma.auditLog.count({ where })
+    ]);
+
+    return {
+      total,
+      take,
+      skip,
+      items: items.map((item) => ({
+        id: item.id,
+        action: item.action,
+        userId: item.userId,
+        email: item.email,
+        path: item.path,
+        status: item.status,
+        metadata: item.metadata ? JSON.parse(item.metadata) : {},
+        createdAt: item.createdAt
+      }))
+    };
   }
 }
