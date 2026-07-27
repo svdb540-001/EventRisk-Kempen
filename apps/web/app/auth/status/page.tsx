@@ -37,13 +37,17 @@ export default async function AuthStatusPage() {
 
       {state.authenticated && state.user ? (
         <div>
-          <p><strong>Ingelogd</strong> als {state.user.name} ({state.user.email})</p>
+          <p>
+            <strong>Ingelogd</strong> als {state.user.name} ({state.user.email})
+          </p>
           <a href={`${baseUrl}/auth/logout`}>Logout</a>
         </div>
       ) : (
         <div>
-          <p><strong>Niet ingelogd</strong></p>
-          <a href={`${baseUrl}/auth/login`}>Login met Microsoft Entra ID (placeholder)</a>
+          <p>
+            <strong>Niet ingelogd</strong>
+          </p>
+          <a href={`${baseUrl}/auth/login`}>Login met Microsoft Entra ID</a>
         </div>
       )}
     </main>

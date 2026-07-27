@@ -1,15 +1,11 @@
-import { Controller, Get, Req, Res } from '@nestjs/common';
+import { Controller, Get, Query, Req, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
-
-interface SessionUser {
-  id: string;
-  name: string;
-  email: string;
-  provider: 'entra';
-}
+import { AuthService, SessionUser } from './auth.service';
 
 @Controller()
 export class AppController {
+  constructor(private readonly authService: AuthService) {}
+
   @Get('health')
   getHealth() {
     return {
@@ -20,34 +16,63 @@ export class AppController {
 
   @Get('auth/login')
   login(@Req() req: Request, @Res() res: Response) {
-    // Placeholder flow voor Update 2: simuleert Entra login resultaat
-    const user: SessionUser = {
-      id: 'entra-demo-user',
-      name: 'Demo User',
-      email: 'demo.user@eventrisk.local',
-      provider: 'entra'
-    };
+    if (!this.authService.hasRequiredConfig()) {
+      return res.status(500).json({
+        error: 'missing_entra_config',
+        message: 'Controleer ENTRA_TENANT_ID, ENTRA_CLIENT_ID, ENTRA_CLIENT_SECRET en ENTRA_REDIRECT_URI'
+      });
+    }
 
-    (req.session as any).user = user;
+    const state = crypto.randomUUID();
+    (req.session as any).oauthState = state;
 
-    const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    return res.redirect(`${redirectUrl}/auth/status`);
+    const url = this.authService.buildAuthorizationUrl(state);
+    return res.redirect(url);
   }
 
   @Get('auth/callback')
-  callback(@Req() req: Request, @Res() res: Response) {
-    // Callback placeholder zolang echte OAuth code exchange nog niet actief is
-    if (!(req.session as any).user) {
-      (req.session as any).user = {
-        id: 'entra-callback-user',
-        name: 'Callback User',
-        email: 'callback.user@eventrisk.local',
-        provider: 'entra'
-      } as SessionUser;
+  async callback(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Query('code') code?: string,
+    @Query('state') state?: string,
+    @Query('error') error?: string,
+    @Query('error_description') errorDescription?: string
+  ) {
+    if (error) {
+      return res.status(401).json({
+        error,
+        error_description: errorDescription || 'OAuth authorization failed'
+      });
     }
 
-    const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    return res.redirect(`${redirectUrl}/auth/status`);
+    const expectedState = (req.session as any).oauthState;
+    if (!state || !expectedState || state !== expectedState) {
+      return res.status(400).json({ error: 'invalid_state' });
+    }
+
+    if (!code) {
+      return res.status(400).json({ error: 'missing_code' });
+    }
+
+    try {
+      const tokenResponse = await this.authService.exchangeCodeForTokens(code);
+      if (!tokenResponse.id_token) {
+        return res.status(400).json({ error: 'missing_id_token' });
+      }
+
+      const user: SessionUser = this.authService.mapUserFromIdToken(tokenResponse.id_token);
+      (req.session as any).user = user;
+      (req.session as any).oauthState = undefined;
+
+      const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      return res.redirect(`${redirectUrl}/auth/status`);
+    } catch (e: any) {
+      return res.status(500).json({
+        error: 'token_exchange_failed',
+        message: e?.message || 'Unknown error while exchanging code'
+      });
+    }
   }
 
   @Get('auth/me')
