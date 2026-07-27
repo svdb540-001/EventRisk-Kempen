@@ -14,12 +14,14 @@ async function bootstrap() {
   app.use(cookieParser());
   app.use(
     session({
+      name: 'eventrisk.sid',
       secret: process.env.SESSION_SECRET || 'dev-secret',
       resave: false,
       saveUninitialized: false,
+      rolling: true,
       cookie: {
         httpOnly: true,
-        secure: false,
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 1000 * 60 * 60 * 8
       }

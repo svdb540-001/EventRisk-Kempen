@@ -45,6 +45,10 @@ export class AuthService {
     return `https://login.microsoftonline.com/${this.tenantId}`;
   }
 
+  getAdminRole() {
+    return process.env.ENTRA_ADMIN_ROLE || 'EventRisk.Admin';
+  }
+
   buildAuthorizationUrl(state: string) {
     const params = new URLSearchParams({
       client_id: this.clientId,
@@ -120,11 +124,5 @@ export class AuthService {
 
   hasRequiredConfig() {
     return Boolean(this.tenantId && this.clientId && this.clientSecret && this.redirectUri);
-  }
-
-  isUserAdmin(user: SessionUser | undefined) {
-    if (!user) return false;
-    const adminRole = process.env.ENTRA_ADMIN_ROLE || 'EventRisk.Admin';
-    return user.roles.includes(adminRole);
   }
 }
