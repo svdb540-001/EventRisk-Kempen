@@ -6,6 +6,7 @@ export interface SessionUser {
   name: string;
   email: string;
   provider: 'entra';
+  roles: string[];
 }
 
 interface TokenResponse {
@@ -105,15 +106,25 @@ export class AuthService {
       (decoded.sid as string) ||
       `entra-${email}`;
 
+    const rawRoles = (decoded.roles as string[] | string | undefined) || [];
+    const roles = Array.isArray(rawRoles) ? rawRoles : [rawRoles];
+
     return {
       id,
       name,
       email,
-      provider: 'entra'
+      provider: 'entra',
+      roles
     };
   }
 
   hasRequiredConfig() {
     return Boolean(this.tenantId && this.clientId && this.clientSecret && this.redirectUri);
+  }
+
+  isUserAdmin(user: SessionUser | undefined) {
+    if (!user) return false;
+    const adminRole = process.env.ENTRA_ADMIN_ROLE || 'EventRisk.Admin';
+    return user.roles.includes(adminRole);
   }
 }

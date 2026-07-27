@@ -5,6 +5,7 @@ export type AuthMeResponse = {
     name: string;
     email: string;
     provider: 'entra';
+    roles: string[];
   };
 };
 
@@ -39,6 +40,12 @@ export default async function AuthStatusPage() {
         <div>
           <p>
             <strong>Ingelogd</strong> als {state.user.name} ({state.user.email})
+          </p>
+          <p>
+            <strong>Rollen:</strong> {state.user.roles.length ? state.user.roles.join(', ') : 'geen'}
+          </p>
+          <p>
+            <a href={`${baseUrl}/admin`}>Test admin endpoint</a>
           </p>
           <a href={`${baseUrl}/auth/logout`}>Logout</a>
         </div>

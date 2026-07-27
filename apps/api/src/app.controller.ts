@@ -92,6 +92,38 @@ export class AppController {
     };
   }
 
+  @Get('admin')
+  admin(@Req() req: Request, @Res() res: Response) {
+    const user = (req.session as any).user as SessionUser | undefined;
+
+    if (!user) {
+      return res.status(401).json({
+        error: 'unauthenticated',
+        message: 'Login required'
+      });
+    }
+
+    if (!this.authService.isUserAdmin(user)) {
+      return res.status(403).json({
+        error: 'forbidden',
+        message: 'Admin role required',
+        requiredRole: process.env.ENTRA_ADMIN_ROLE || 'EventRisk.Admin',
+        userRoles: user.roles
+      });
+    }
+
+    return res.json({
+      ok: true,
+      message: 'Welcome, admin user',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        roles: user.roles
+      }
+    });
+  }
+
   @Get('auth/logout')
   logout(@Req() req: Request, @Res() res: Response) {
     req.session.destroy(() => {
