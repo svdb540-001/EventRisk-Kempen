@@ -1,15 +1,14 @@
 {
   "name": "eventrisk-kempen",
   "private": true,
-  "version": "0.1.0",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
-    "dev:web": "npm run dev --workspace @eventrisk/web",
-    "dev:api": "npm run start:dev --workspace @eventrisk/api",
-    "build": "npm run build --workspaces",
-    "lint": "npm run lint --workspaces"
+    "dev:web": "npm --workspace @eventrisk/web run dev",
+    "dev:api": "npm --workspace @eventrisk/api run start:dev",
+    "db:generate": "npm --workspace @eventrisk/api run db:generate",
+    "db:push": "npm --workspace @eventrisk/api run db:push",
+    "db:studio": "npm --workspace @eventrisk/api run db:studio"
   }
 }

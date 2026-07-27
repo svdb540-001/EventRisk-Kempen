@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
 
 interface AuditLogInput {
   action: string;
@@ -13,7 +14,9 @@ interface AuditLogInput {
 export class AuditService {
   private readonly logger = new Logger('AuditService');
 
-  log(input: AuditLogInput) {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async log(input: AuditLogInput) {
     const payload = {
       ts: new Date().toISOString(),
       action: input.action,
@@ -25,5 +28,16 @@ export class AuditService {
     };
 
     this.logger.log(JSON.stringify(payload));
+
+    await this.prisma.auditLog.create({
+      data: {
+        action: input.action,
+        userId: input.userId,
+        email: input.email,
+        path: input.path,
+        status: input.status,
+        metadata: JSON.stringify(input.metadata || {})
+      }
+    });
   }
 }

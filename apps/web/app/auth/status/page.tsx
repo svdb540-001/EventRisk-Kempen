@@ -7,6 +7,14 @@ export type AuthMeResponse = {
     provider: 'entra';
     roles: string[];
   };
+  profile?: null | {
+    id: string;
+    name: string;
+    email: string;
+    roles: string[];
+    createdAt: string;
+    updatedAt: string;
+  };
 };
 
 async function getAuthState(): Promise<AuthMeResponse> {
@@ -18,7 +26,7 @@ async function getAuthState(): Promise<AuthMeResponse> {
   });
 
   if (!response.ok) {
-    return { authenticated: false, user: null };
+    return { authenticated: false, user: null, profile: null };
   }
 
   return response.json();
@@ -44,6 +52,16 @@ export default async function AuthStatusPage() {
           <p>
             <strong>Rollen:</strong> {state.user.roles.length ? state.user.roles.join(', ') : 'geen'}
           </p>
+          {state.profile ? (
+            <div>
+              <p>
+                <strong>DB Profiel ID:</strong> {state.profile.id}
+              </p>
+              <p>
+                <strong>DB Aangemaakt:</strong> {new Date(state.profile.createdAt).toLocaleString()}
+              </p>
+            </div>
+          ) : null}
           <p>
             <a href={`${baseUrl}/admin`}>Test admin endpoint</a>
           </p>

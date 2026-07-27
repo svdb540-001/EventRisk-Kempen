@@ -14,12 +14,14 @@ import { AuthService, SessionUser } from './auth.service';
 import { AuditService } from './audit.service';
 import { Roles } from './roles.decorator';
 import { RolesGuard } from './roles.guard';
+import { UsersService } from './users.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly authService: AuthService,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
+    private readonly usersService: UsersService
   ) {}
 
   @Get('health')
@@ -31,9 +33,9 @@ export class AppController {
   }
 
   @Get('auth/login')
-  login(@Req() req: Request, @Res() res: Response) {
+  async login(@Req() req: Request, @Res() res: Response) {
     if (!this.authService.hasRequiredConfig()) {
-      this.auditService.log({
+      await this.auditService.log({
         action: 'auth.login.failed.missing_config',
         path: '/auth/login',
         status: 500
@@ -47,7 +49,7 @@ export class AppController {
     const state = crypto.randomUUID();
     (req.session as any).oauthState = state;
 
-    this.auditService.log({
+    await this.auditService.log({
       action: 'auth.login.redirect_to_entra',
       path: '/auth/login',
       status: 302
@@ -67,7 +69,7 @@ export class AppController {
     @Query('error_description') errorDescription?: string
   ) {
     if (error) {
-      this.auditService.log({
+      await this.auditService.log({
         action: 'auth.callback.failed.provider_error',
         path: '/auth/callback',
         status: 401,
@@ -81,7 +83,7 @@ export class AppController {
 
     const expectedState = (req.session as any).oauthState;
     if (!state || !expectedState || state !== expectedState) {
-      this.auditService.log({
+      await this.auditService.log({
         action: 'auth.callback.failed.invalid_state',
         path: '/auth/callback',
         status: 400
@@ -90,7 +92,7 @@ export class AppController {
     }
 
     if (!code) {
-      this.auditService.log({
+      await this.auditService.log({
         action: 'auth.callback.failed.missing_code',
         path: '/auth/callback',
         status: 400
@@ -101,7 +103,7 @@ export class AppController {
     try {
       const tokenResponse = await this.authService.exchangeCodeForTokens(code);
       if (!tokenResponse.id_token) {
-        this.auditService.log({
+        await this.auditService.log({
           action: 'auth.callback.failed.missing_id_token',
           path: '/auth/callback',
           status: 400
@@ -113,19 +115,21 @@ export class AppController {
       (req.session as any).user = user;
       (req.session as any).oauthState = undefined;
 
-      this.auditService.log({
+      const dbUser = await this.usersService.upsertFromSessionUser(user);
+
+      await this.auditService.log({
         action: 'auth.callback.success',
-        userId: user.id,
+        userId: dbUser.id,
         email: user.email,
         path: '/auth/callback',
         status: 302,
-        metadata: { roles: user.roles }
+        metadata: { roles: user.roles, entraObjectId: user.id }
       });
 
       const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       return res.redirect(`${redirectUrl}/auth/status`);
     } catch (e: any) {
-      this.auditService.log({
+      await this.auditService.log({
         action: 'auth.callback.failed.token_exchange',
         path: '/auth/callback',
         status: 500,
@@ -139,7 +143,7 @@ export class AppController {
   }
 
   @Get('auth/me')
-  me(@Req() req: Request) {
+  async me(@Req() req: Request) {
     const user = (req.session as any).user as SessionUser | undefined;
 
     if (!user) {
@@ -149,16 +153,28 @@ export class AppController {
       };
     }
 
+    const profile = await this.usersService.getProfileByEntraObjectId(user.id);
+
     return {
       authenticated: true,
-      user
+      user,
+      profile: profile
+        ? {
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            roles: JSON.parse(profile.rolesJson || '[]'),
+            createdAt: profile.createdAt,
+            updatedAt: profile.updatedAt
+          }
+        : null
     };
   }
 
   @UseGuards(RolesGuard)
   @Roles('EventRisk.Admin')
   @Get('admin')
-  admin(@Req() req: Request) {
+  async admin(@Req() req: Request) {
     const user = (req.session as any).user as SessionUser | undefined;
 
     if (!user) {
@@ -169,15 +185,15 @@ export class AppController {
     const hasConfiguredRole = user.roles.includes(configuredRole);
 
     if (!hasConfiguredRole) {
-      this.auditService.log({
+      await this.auditService.log({
         action: 'authz.admin.denied',
-        userId: user.id,
         email: user.email,
         path: '/admin',
         status: 403,
         metadata: {
           requiredRole: configuredRole,
-          userRoles: user.roles
+          userRoles: user.roles,
+          entraObjectId: user.id
         }
       });
       throw new ForbiddenException({
@@ -188,15 +204,18 @@ export class AppController {
       });
     }
 
-    this.auditService.log({
+    const profile = await this.usersService.getProfileByEntraObjectId(user.id);
+
+    await this.auditService.log({
       action: 'authz.admin.allowed',
-      userId: user.id,
+      userId: profile?.id,
       email: user.email,
       path: '/admin',
       status: 200,
       metadata: {
         requiredRole: configuredRole,
-        userRoles: user.roles
+        userRoles: user.roles,
+        entraObjectId: user.id
       }
     });
 
@@ -208,7 +227,15 @@ export class AppController {
         name: user.name,
         email: user.email,
         roles: user.roles
-      }
+      },
+      profile: profile
+        ? {
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            roles: JSON.parse(profile.rolesJson || '[]')
+          }
+        : null
     };
   }
 
@@ -216,25 +243,24 @@ export class AppController {
   logout(@Req() req: Request, @Res() res: Response) {
     const user = (req.session as any).user as SessionUser | undefined;
 
-    req.session.destroy((err) => {
+    req.session.destroy(async (err) => {
       if (err) {
-        this.auditService.log({
+        await this.auditService.log({
           action: 'auth.logout.failed',
-          userId: user?.id,
           email: user?.email,
           path: '/auth/logout',
           status: 500,
-          metadata: { error: err.message }
+          metadata: { error: err.message, entraObjectId: user?.id }
         });
         throw new InternalServerErrorException('Logout failed');
       }
 
-      this.auditService.log({
+      await this.auditService.log({
         action: 'auth.logout.success',
-        userId: user?.id,
         email: user?.email,
         path: '/auth/logout',
-        status: 302
+        status: 302,
+        metadata: { entraObjectId: user?.id }
       });
 
       res.clearCookie('eventrisk.sid');
