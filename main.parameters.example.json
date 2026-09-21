@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "prefix": { "value": "eventriskkempenprod" },
+    "entraTenantId": { "value": "00000000-0000-0000-0000-000000000000" },
+    "entraSpaClientId": { "value": "00000000-0000-0000-0000-000000000000" },
+    "entraApiClientId": { "value": "00000000-0000-0000-0000-000000000000" },
+    "entraApiScope": { "value": "api://00000000-0000-0000-0000-000000000000/EventRisk.Access" },
+    "postgresAdminUser": { "value": "eventriskadmin" },
+    "appServiceSku": { "value": "P1v3" },
+    "postgresSku": { "value": "Standard_B1ms" }
+  }
+}

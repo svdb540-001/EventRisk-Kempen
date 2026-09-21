@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#002449">
+  <title>EventRisk Kempen</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Ga naar de inhoud</a>
+
+  <section id="loginScreen" class="login-screen">
+    <div class="login-panel">
+      <div class="login-box">
+        <div class="login-brand">
+          <div class="zone-mark"><img class="brand-logo" src="./assets/brandweer-zone-kempen-logo.png" alt="Logo Brandweer Zone Kempen"></div>
+          <div><h1>EventRisk Kempen</h1><p>Evenementenportaal voor hulpdiensten</p></div>
+        </div>
+        <div class="eyebrow red">Veilig, uniform en multidisciplinair</div>
+        <h2>Welkom</h2>
+        <p>Alleen gemachtigde medewerkers van D1, D2, D3 en het zonaal beheer kunnen aanmelden.</p>
+        <div id="loginError" class="alert alert-danger hidden"></div>
+        <button id="microsoftLoginButton" class="btn btn-microsoft btn-wide" type="button">
+          <span class="microsoft-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          Aanmelden met Microsoft
+        </button>
+        <div id="developmentLogin" class="demo-box hidden">
+          <strong>Lokale ontwikkelmodus</strong>
+          <p>Deze keuze bestaat uitsluitend lokaal en wordt in productie door de server geweigerd.</p>
+          <label class="field">Testrol
+            <select id="devRole">
+              <option value="EventRisk.Admin">Zonaal beheerder</option>
+              <option value="EventRisk.Coordinator">Multidisciplinair coördinator</option>
+              <option value="EventRisk.D1">D1 · Brandweer</option>
+              <option value="EventRisk.D2">D2 · Medische discipline</option>
+              <option value="EventRisk.D3">D3 · Politie</option>
+            </select>
+          </label>
+          <button id="developmentLoginButton" class="btn btn-primary btn-wide" type="button">Open lokale testomgeving</button>
+        </div>
+        <p class="privacy-note">Geen gemeenteaccounts of organisatoraccounts. Gemeentelijke gegevens komen uitsluitend binnen via EagleBe of Flowlab.</p>
+      </div>
+    </div>
+    <div class="login-visual">
+      <div class="visual-copy">
+        <div class="eyebrow">Brandweer Zone Kempen · D1, D2 en D3</div>
+        <h2>Eén veilig dossier voor elke betrokken hulpdienst.</h2>
+        <p>Van automatische import tot risicoanalyse, disciplinair advies, documentcontrole en beveiligde terugkoppeling naar het gemeentelijke evenementenloket.</p>
+        <div class="feature-row">
+          <span class="feature-chip">Microsoft Entra ID</span>
+          <span class="feature-chip">D1, D2 en D3</span>
+          <span class="feature-chip">EagleBe ⇄ EventRisk</span>
+          <span class="feature-chip">Flowlab ⇄ EventRisk</span>
+        </div>
+        <p class="mission-note">#samenveiligverder</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="appShell" class="app-shell hidden">
+    <aside id="sidebar" class="sidebar">
+      <button class="side-brand" data-page="dashboard" type="button">
+        <div class="zone-mark small-mark"><img class="brand-logo" src="./assets/brandweer-zone-kempen-logo.png" alt="Logo Brandweer Zone Kempen"></div>
+        <div><h1>EventRisk Kempen</h1><p>Hulpdienstenportaal</p></div>
+      </button>
+      <nav id="navigation" class="nav" aria-label="Hoofdnavigatie"></nav>
+      <div class="side-bottom">
+        <div class="user-mini"><div id="userAvatar" class="avatar">--</div><div><b id="userName">Gebruiker</b><small id="userRole">Rol</small></div></div>
+        <button id="logoutButton" class="logout-btn" type="button">Afmelden</button>
+        <div class="mission-tag">Samen Veilig Verder</div>
+      </div>
+    </aside>
+
+    <main class="app-main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="mobileMenuButton" class="icon-btn mobile-menu" type="button" aria-label="Menu openen">☰</button>
+          <div class="page-title"><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Zonale opvolging van evenementendossiers</p></div>
+        </div>
+        <div class="top-actions">
+          <span id="environmentBadge" class="badge badge-soft"></span>
+          <button id="refreshButton" class="btn btn-light btn-sm" type="button">↻ Vernieuwen</button>
+        </div>
+      </header>
+      <div id="toastRoot" class="toast-root" aria-live="polite"></div>
+      <section id="main" class="content" tabindex="-1"></section>
+    </main>
+  </div>
+
+  <dialog id="modal">
+    <div class="modal-head"><h3 id="modalTitle">Details</h3><button id="modalClose" class="modal-close" type="button" aria-label="Sluiten">×</button></div>
+    <div id="modalBody" class="modal-body"></div>
+  </dialog>
+
+  <script src="./vendor/msal-browser.min.js" defer></script>
+  <script src="./auth.js" defer></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>

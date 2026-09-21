@@ -1,0 +1,17 @@
+{
+  "externalId": ["id", "requestId", "application.id", "dossier.id"],
+  "externalReference": ["reference", "requestNumber", "application.reference", "dossier.number"],
+  "municipality": ["municipality.name", "municipality", "tenant.name", "city"],
+  "name": ["name", "title", "event.name", "form.eventName"],
+  "startAt": ["startAt", "startDate", "event.start", "form.startDate"],
+  "endAt": ["endAt", "endDate", "event.end", "form.endDate"],
+  "address": ["location.address", "address.full", "address", "form.location"],
+  "attendance": ["attendance", "expectedVisitors", "event.expectedAttendance", "form.attendance"],
+  "organizer.name": ["organizer.organization", "organizer.name", "applicant.organization", "association.name"],
+  "organizer.contact": ["organizer.contactName", "applicant.fullName", "contact.name"],
+  "organizer.email": ["organizer.email", "applicant.email", "contact.email"],
+  "organizer.phone": ["organizer.phone", "applicant.phone", "contact.phone"],
+  "status": ["status", "workflow.status", "application.status"],
+  "documents": ["documents", "attachments", "application.attachments"],
+  "sourceUpdatedAt": ["updatedAt", "modifiedAt", "lastModified"]
+}

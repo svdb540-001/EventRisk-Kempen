@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: eventrisk
+      POSTGRES_USER: eventrisk
+      POSTGRES_PASSWORD: eventrisk-local-only
+    volumes:
+      - eventrisk-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventrisk -d eventrisk"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
+    command: azurite-blob --blobHost 0.0.0.0 --location /data
+    volumes:
+      - eventrisk-azurite:/data
+    ports:
+      - "10000:10000"
+
+  eventrisk:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      azurite:
+        condition: service_started
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      APP_BASE_URL: http://localhost:3000
+      AUTH_MODE: development
+      DATABASE_PROVIDER: postgres
+      DATABASE_URL: postgresql://eventrisk:eventrisk-local-only@postgres:5432/eventrisk
+      DATABASE_SSL: "false"
+      STORAGE_PROVIDER: azure
+      AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNoGF3VWv1FZQ==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+      AZURE_STORAGE_CONTAINER: eventrisk-documents
+      MOCK_CONNECTORS: "true"
+      SYNC_AUTOMATIC: "false"
+      DEV_USER_NAME: Lokale Docker-gebruiker
+      DEV_USER_EMAIL: docker@example.invalid
+      DEV_USER_ROLE: EventRisk.Admin
+    restart: unless-stopped
+
+volumes:
+  eventrisk-postgres:
+  eventrisk-azurite:

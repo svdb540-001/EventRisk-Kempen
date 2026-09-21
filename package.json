@@ -1,14 +1,24 @@
 {
   "name": "eventrisk-kempen",
+  "version": "2.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
+  "type": "module",
+  "description": "Uitrolbare evenementenrisicotoepassing voor de hulpdiensten van de zone Kempen.",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
-    "dev:web": "npm --workspace @eventrisk/web run dev",
-    "dev:api": "npm --workspace @eventrisk/api run start:dev",
-    "db:generate": "npm --workspace @eventrisk/api run db:generate",
-    "db:push": "npm --workspace @eventrisk/api run db:push",
-    "db:studio": "npm --workspace @eventrisk/api run db:studio"
+    "dev": "node --watch --env-file-if-exists=.env server.mjs",
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "seed": "node --env-file-if-exists=.env scripts/seed.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check server.mjs && node --check public/app.js && node --check public/auth.js && node --check src/db.mjs && node --check src/storage.mjs",
+    "smoke": "node scripts/smoke-test.mjs"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.0.0",
+    "@azure/storage-blob": "^12.0.0",
+    "pg": "^8.0.0",
+    "@azure/msal-browser": "^5.0.0"
   }
 }

@@ -1,0 +1,137 @@
+{
+  "protocolVersion": "Protocolakkoord zonale aanpak evenementen v2.3 LW – werkdocument (21/09/2016)",
+  "rounding": "round",
+  "parameters": [
+    {
+      "id": "attendance",
+      "title": "Aantal aanwezigen",
+      "options": [
+        {"id":"lt100","label":"Minder dan 100","d1":0,"d2":0,"d3":0,"min":0,"max":99},
+        {"id":"100_499","label":"100 – 499","d1":1,"d2":1,"d3":1,"min":100,"max":499},
+        {"id":"500_2000","label":"500 – 2.000","d1":2,"d2":2,"d3":2,"min":500,"max":2000},
+        {"id":"2001_5000","label":"2.001 – 5.000","d1":3,"d2":3,"d3":3,"min":2001,"max":5000},
+        {"id":"5001_20000","label":"5.001 – 20.000","d1":4,"d2":4,"d3":4,"min":5001,"max":20000},
+        {"id":"gt20000","label":"Meer dan 20.000","d1":5,"d2":5,"d3":5,"min":20001,"max":null}
+      ]
+    },
+    {
+      "id": "audience",
+      "title": "Doelgroep",
+      "options": [
+        {"id":"normal","label":"Normaal","d1":0,"d2":0,"d3":0},
+        {"id":"vulnerable","label":"Jong / oud / kwetsbaar","d1":0,"d2":0.33,"d3":0},
+        {"id":"violence","label":"Risico tot geweld","d1":0,"d2":0.66,"d3":1}
+      ]
+    },
+    {
+      "id": "eventType",
+      "title": "Type evenement",
+      "options": [
+        {"id":"dance","label":"Fuif / dancefestival","d1":0.33,"d2":0,"d3":0.33},
+        {"id":"music","label":"Optreden / muziekfestival","d1":0,"d2":0,"d3":0},
+        {"id":"sport_recreational","label":"Sportwedstrijd (recreatief)","d1":0,"d2":0.33,"d3":0},
+        {"id":"sport_competitive","label":"Sportwedstrijd (competitief)","d1":0,"d2":0.66,"d3":0.33},
+        {"id":"family","label":"Familiaal","d1":0,"d2":0,"d3":0},
+        {"id":"recreational","label":"Recreatief","d1":0,"d2":0,"d3":0},
+        {"id":"fair_market_parade","label":"Kermis / markt / stoet","d1":0,"d2":0,"d3":0},
+        {"id":"passage","label":"Doortocht","d1":-1,"d2":-1,"d3":-1},
+        {"id":"circus","label":"Circus","d1":0,"d2":0,"d3":0},
+        {"id":"airshow","label":"Vliegshow","d1":1,"d2":1,"d3":1},
+        {"id":"foodtruck","label":"Foodtruckfestival","d1":0.33,"d2":0,"d3":0,"needsApproval":true}
+      ]
+    },
+    {
+      "id": "catering",
+      "title": "Catering",
+      "options": [
+        {"id":"none","label":"Geen","d1":0,"d2":0,"d3":0},
+        {"id":"own_cold","label":"Eigen catering – koud","d1":0,"d2":0.33,"d3":0},
+        {"id":"own_hot","label":"Eigen catering – warm","d1":0.33,"d2":0.33,"d3":0},
+        {"id":"external_hot","label":"Externe professionele catering – warm","d1":0,"d2":0,"d3":0}
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "options": [
+        {"id":"none","label":"Geen","d1":0,"d2":0,"d3":0},
+        {"id":"own","label":"Eigen leden","d1":0,"d2":0,"d3":0.33},
+        {"id":"professional","label":"Extern professioneel","d1":-0.33,"d2":0,"d3":0.33,"needsApproval":true}
+      ]
+    },
+    {
+      "id": "substances",
+      "title": "Drank / drugs",
+      "options": [
+        {"id":"absent","label":"Niet aanwezig","d1":-0.33,"d2":0,"d3":0},
+        {"id":"present_low","label":"Aanwezig zonder verhoogd risico","d1":0,"d2":0,"d3":0.33},
+        {"id":"abundant","label":"Overvloedig, met risico","d1":0.33,"d2":0.33,"d3":0.66},
+        {"id":"problematic","label":"Problematisch","d1":0.33,"d2":0.33,"d3":0.66,"needsApproval":true}
+      ]
+    },
+    {
+      "id": "sound",
+      "title": "Afwijking geluidsnorm",
+      "options": [
+        {"id":"none","label":"Geen","d1":0,"d2":0,"d3":0},
+        {"id":"95db","label":"Tot 95 dB","d1":0,"d2":0,"d3":0.33},
+        {"id":"100db","label":"Tot 100 dB","d1":0,"d2":0,"d3":0.66}
+      ]
+    },
+    {
+      "id": "location",
+      "title": "Locatie",
+      "options": [
+        {"id":"streets","label":"Openlucht – marktplein / straten","d1":0,"d2":0,"d3":0},
+        {"id":"open_field","label":"Open terrein – weides","d1":-1,"d2":0,"d3":0,"needsApproval":true},
+        {"id":"recreation_domain","label":"Recreatiedomein","d1":-1,"d2":-0.33,"d3":-0.33},
+        {"id":"proper_indoor","label":"Lokaal – eigenlijk gebruik","d1":-1,"d2":-0.33,"d3":-0.33},
+        {"id":"improper_indoor","label":"Lokaal – oneigenlijk gebruik","d1":1,"d2":0.33,"d3":0.33},
+        {"id":"large_tent","label":"Grote tent – vanaf 500 m²","d1":0.66,"d2":0.33,"d3":0}
+      ]
+    },
+    {
+      "id": "reputation",
+      "title": "Reputatie",
+      "options": [
+        {"id":"good","label":"Goed","d1":-0.66,"d2":-0.66,"d3":-0.66},
+        {"id":"unknown","label":"Geen / onbekend","d1":0,"d2":0,"d3":0},
+        {"id":"bad","label":"Slecht","d1":1,"d2":1,"d3":1}
+      ]
+    },
+    {
+      "id": "accessibility",
+      "title": "Bereikbaarheid",
+      "options": [
+        {"id":"good","label":"Goed","d1":-0.66,"d2":-0.66,"d3":-0.66},
+        {"id":"normal","label":"Normaal","d1":0,"d2":0,"d3":0},
+        {"id":"bad","label":"Slecht","d1":1,"d2":1,"d3":1}
+      ]
+    }
+  ],
+  "additionalFactors": [
+    {"id":"fireworks","label":"Vuurwerk"},
+    {"id":"openFire","label":"Open vuur"},
+    {"id":"specialStructures","label":"Speciale constructies"},
+    {"id":"camping","label":"Camping"},
+    {"id":"water","label":"Water"},
+    {"id":"weather","label":"Weersomstandigheden"},
+    {"id":"other","label":"Andere risicofactor"}
+  ],
+  "measures": {
+    "0": ["Geen bijkomende multidisciplinaire maatregel."],
+    "1": ["Melding aan de betrokken disciplines."],
+    "2": ["Melding aan de betrokken disciplines.", "Inplantingsplan.", "Standaardadvies."],
+    "3": ["Melding aan de betrokken disciplines.", "Specifiek advies D1, D2 en D3.", "Voorlopig inplantingsplan bij melding.", "Veiligheidsplan.", "Definitieve plannen uiterlijk 5 dagen vóór de start."],
+    "4": ["Melding aan de betrokken disciplines.", "Specifiek advies D1, D2 en D3.", "Veiligheidsoverleg.", "Veiligheidsdossier.", "Veiligheidsrondgang.", "Definitieve plannen uiterlijk 5 dagen vóór de start."],
+    "5": ["Melding aan de betrokken disciplines.", "Specifiek advies D1, D2 en D3.", "Veiligheidsoverleg.", "Veiligheidsdossier.", "Veiligheidsrondgang.", "CP-OPS en multidisciplinaire permanentie.", "Evaluatievergadering."]
+  },
+  "requiredDocuments": {
+    "0": [],
+    "1": [],
+    "2": ["Inplantingsplan"],
+    "3": ["Inplantingsplan", "Veiligheidsplan"],
+    "4": ["Inplantingsplan", "Veiligheidsdossier"],
+    "5": ["Inplantingsplan", "Veiligheidsdossier", "CP-OPS-plan"]
+  }
+}

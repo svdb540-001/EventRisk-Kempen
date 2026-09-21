@@ -1,0 +1,28 @@
+name: EventRisk CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code ophalen
+        uses: actions/checkout@v4
+      - name: Node.js instellen
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Afhankelijkheden installeren
+        run: npm install --no-audit --no-fund
+      - name: Syntax controleren
+        run: npm run check
+      - name: Tests uitvoeren
+        run: npm test
+      - name: Docker-image bouwen
+        run: docker build -t eventrisk-kempen:test .

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "EB-MOL-2026-0018",
+    "reference": "MOL-EV-2026-018",
+    "municipality": {"name": "Mol"},
+    "name": "Zilvermeer Foodtruckfestival",
+    "startAt": "2026-09-12T10:00:00+02:00",
+    "endAt": "2026-09-12T23:30:00+02:00",
+    "location": {"address": "Zilvermeerlaan 2, 2400 Mol"},
+    "expectedVisitors": 1800,
+    "organizer": {
+      "organization": "Taste Events BV",
+      "contactName": "Sam Peeters",
+      "email": "sam@example.org",
+      "phone": "+32 470 00 00 02"
+    },
+    "status": "submitted",
+    "updatedAt": "2026-07-25T09:30:00Z",
+    "attachments": [
+      {"name":"inplantingsplan.pdf","type":"Inplantingsplan","url":"https://example.invalid/inplantingsplan.pdf"}
+    ]
+  }
+]
